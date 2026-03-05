@@ -181,8 +181,8 @@ function renderTeams() {
   t2.classList.add("fade-out");
 
   setTimeout(() => {
-    t1.innerHTML = "<h2>Bal csapat</h2>";
-    t2.innerHTML = "<h2>Jobb csapat</h2>";
+    t1.innerHTML = "<h2>"A" csapat</h2>";
+    t2.innerHTML = "<h2>"B" csapat</h2>";
 
     const pairing = currentPairing();
     pairing.left.forEach(p => t1.appendChild(playerRow(p)));
