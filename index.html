@@ -142,9 +142,9 @@ function currentPairing() {
   if (n === 4) {
     const A = p[0], E = p[1], L = p[2], Z = p[3];
     const patterns = [
+      { left: [A,E], right: [L,Z] },
       { left: [A,L], right: [E,Z] },
-      { left: [A,Z], right: [E,L] },
-      { left: [A,E], right: [L,Z] }
+      { left: [A,Z], right: [E,L] }
     ];
     return patterns[state.matchIndex % 3];
   }
