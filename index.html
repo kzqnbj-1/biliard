@@ -10,31 +10,63 @@
     h1 { text-align: center; font-size: 30px; }
     #roundDisplay { text-align:center; margin-top:-10px; font-size:24px; }
 
-    .teams { display: flex; gap: 12px; flex-wrap: wrap; }
+    .top-layout {
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .teams-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .buttons-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .team {
-      flex: 1 1 150px;
       background: #fff;
       padding: 16px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       opacity: 1;
+      min-height: 120px;
     }
 
-    /* Animációk – lassabb */
-    .fade-out { opacity: 0; transition: opacity 0.6s ease; }
-    .fade-in { opacity: 1; transition: opacity 0.6s ease; }
+    .fade-out { opacity: 0; transition: opacity 0.4s ease; }
+    .fade-in { opacity: 1; transition: opacity 0.4s ease; }
 
     .team h2 { margin-top: 0; font-size: 24px; }
     .player-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .player-row input { flex: 1; padding: 6px 8px; font-size: 20px; max-width: 120px; }
-    .player-row span { white-space: nowrap; font-size: 22px; }
+    .player-row input { flex: 1; padding: 6px 8px; font-size: 26px; max-width: 120px; }
+    .player-row span { white-space: nowrap; font-size: 26px; }
 
-    .buttons { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-    button { padding: 16px; border: none; border-radius: 6px; font-size: 22px; cursor: pointer; }
-    .win1 { background: #2e7d32; color: #fff; flex: 1 1 150px; }
-    .win2 { background: #1565c0; color: #fff; flex: 1 1 150px; }
-    .reset { background: #c62828; color: #fff; flex: 1 1 150px; }
-    .export { background: #6a1b9a; color: #fff; flex: 1 1 150px; }
+    .square-btn {
+      width: 90px;
+      height: 90px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      line-height: 1.1;
+    }
+
+    .winA { background: #2e7d32; }
+    .winB { background: #1565c0; }
+    .export { background: #6a1b9a; }
+    .reset { background: #c62828; }
 
     h2 { margin-top: 24px; font-size: 26px; }
     ul { padding-left: 20px; }
@@ -50,27 +82,41 @@
       opacity:0;
       animation: fadeIn 0.6s forwards;
     }
-    .score-row { display:flex; justify-content:space-between; margin-bottom:6px; font-size:22px; }
+    .score-row { display:flex; justify-content:space-between; margin-bottom:6px; font-size:30px; }
 
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-    /* Toast – hosszabb ideig látszik */
+    .next-round-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 20px;
+      background: #ff9800;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    /* ANIMÁLT TOAST */
     .toast {
       position: fixed;
-      bottom: 20px;
+      bottom: -80px;
       left: 50%;
       transform: translateX(-50%);
       background: #333;
       color: #fff;
-      padding: 14px 22px;
+      padding: 16px 24px;
       border-radius: 8px;
       font-size: 22px;
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.6s ease;
+      transition: all 0.6s ease;
       z-index: 9999;
     }
-    .toast.show { opacity: 1; }
+    .toast.show {
+      bottom: 20px;
+      opacity: 1;
+    }
   </style>
 </head>
 
@@ -79,17 +125,21 @@
 <h1>Biliárd pontszámoló</h1>
 <h2 id="roundDisplay">Kör: 1</h2>
 
-<div class="teams">
-  <div class="team" id="team1"><h2>A csapat</h2></div>
-  <div class="team" id="team2"><h2>B csapat</h2></div>
+<div class="top-layout">
+  <div class="teams-column">
+    <div class="team" id="team1"><h2>-A- csapat</h2></div>
+    <div class="team" id="team2"><h2>-B- csapat</h2></div>
+  </div>
+
+  <div class="buttons-column">
+    <button class="square-btn winA" onclick="registerWin(1)">-A- nyert</button>
+    <button class="square-btn winB" onclick="registerWin(2)">-B- nyert</button>
+    <button class="square-btn export" onclick="exportHistory()">Export</button>
+    <button class="square-btn reset" onclick="resetAll()">Nullázás</button>
+  </div>
 </div>
 
-<div class="buttons">
-  <button class="win1" onclick="registerWin(1)">A csapat nyert</button>
-  <button class="win2" onclick="registerWin(2)">B csapat nyert</button>
-  <button class="export" onclick="exportHistory()">Napló exportálása</button>
-  <button class="reset" onclick="resetAll()">Nullázás</button>
-</div>
+<div id="nextRoundContainer"></div>
 
 <div class="scoreboard" id="scoreboard">
   <h2>Ponttáblázat</h2>
@@ -113,6 +163,13 @@ let state = {
   roundPoints: {},
   matchIndex: 0
 };
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 4000);
+}
 
 function saveState() {
   localStorage.setItem("billiard_final", JSON.stringify(state));
@@ -177,29 +234,13 @@ function renderTeams() {
   const t1 = document.getElementById("team1");
   const t2 = document.getElementById("team2");
 
-  t1.classList.add("fade-out");
-  t2.classList.add("fade-out");
+  t1.innerHTML = "<h2>-A- csapat</h2>";
+  t2.innerHTML = "<h2>-B- csapat</h2>";
 
-  setTimeout(() => {
-    t1.innerHTML = "<h2>A csapat</h2>";
-    t2.innerHTML = "<h2>B csapat</h2>";
+  const pairing = currentPairing();
 
-    const pairing = currentPairing();
-    pairing.left.forEach(p => t1.appendChild(playerRow(p)));
-    pairing.right.forEach(p => t2.appendChild(playerRow(p)));
-
-    t1.classList.remove("fade-out");
-    t2.classList.remove("fade-out");
-
-    t1.classList.add("fade-in");
-    t2.classList.add("fade-in");
-
-    setTimeout(() => {
-      t1.classList.remove("fade-in");
-      t2.classList.remove("fade-in");
-    }, 600);
-
-  }, 500);
+  pairing.left.forEach(p => t1.appendChild(playerRow(p)));
+  pairing.right.forEach(p => t2.appendChild(playerRow(p)));
 }
 
 function playerRow(player) {
@@ -211,7 +252,7 @@ function playerRow(player) {
   input.onchange = () => renamePlayer(player, input.value);
 
   const span = document.createElement("span");
-  span.textContent = player.points + " pont";
+  span.textContent = state.roundPoints[player.name] + " pont";
 
   div.appendChild(input);
   div.appendChild(span);
@@ -260,47 +301,93 @@ function renderHistory() {
   });
 }
 
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 6000);
-}
-
 function registerWin(teamNumber) {
   const pairing = currentPairing();
   const winners = teamNumber === 1 ? pairing.left : pairing.right;
 
   winners.forEach(p => {
     p.points += 1;
-    if (state.players.length >= 3) {
-      state.roundPoints[p.name] = (state.roundPoints[p.name] || 0) + 1;
-    }
+    state.roundPoints[p.name] = (state.roundPoints[p.name] || 0) + 1;
   });
 
   const names = winners.map(p => p.name).join(" + ");
   state.history.push(`Meccs: ${names} nyert`);
 
+  renderScoreboard();
+  renderTeams();
+
   const n = state.players.length;
   const maxIndex = (n === 4 || n === 3) ? 2 : 0;
 
-  if (n >= 3 && state.matchIndex === maxIndex) {
+  const isRoundEnd = (n >= 3 && state.matchIndex === maxIndex);
+
+  if (isRoundEnd) {
     const summary = `Kör ${state.round}. vége – ` +
-      state.players.map(p => `${p.name}: ${state.roundPoints[p.name] || 0}`).join(", ");
+      state.players.map(p => `${p.name}: ${state.roundPoints[p.name]}`).join(", ");
 
     state.history.push(summary);
-    showToast(summary);
+    renderHistory();
 
-    state.players.forEach(p => p.points = 0);
-    state.round++;
-    ensureRoundPoints();
-    state.matchIndex = 0;
-  } else {
-    state.matchIndex = (state.matchIndex + 1) % (maxIndex + 1);
+    document.getElementById("nextRoundContainer").innerHTML = `
+      <button class="next-round-btn" onclick="startNextRound()">
+        Következő kör kezdése
+      </button>
+    `;
+
+    return;
   }
 
+  state.matchIndex = (state.matchIndex + 1) % (maxIndex + 1);
+  saveState();
+  renderTeams();
+  renderHistory();
+}
+
+function startNextRound() {
+  state.round++;
+  ensureRoundPoints();
+  state.matchIndex = 0;
+
+  document.getElementById("nextRoundContainer").innerHTML = "";
+
+  renderTeams();
   saveState();
   render();
+}
+
+function exportHistory() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mi = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+
+  const filename = `biliárd_${yyyy}.${mm}.${dd}_${hh}-${mi}-${ss}.txt`;
+
+  // Körök összegzése
+  const roundSummary = state.history
+    .filter(h => h.startsWith("Kör"))
+    .join("\n");
+
+  const content =
+    `Fájlnév: ${filename}\n` +
+    `--------------------------\n\n` +
+    state.history.join("\n") +
+    `\n\n--------------------------\nKörök összegzése:\n${roundSummary}\n`;
+
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  showToast(`Exportálva: ${filename}`);
 }
 
 function resetAll() {
@@ -320,30 +407,6 @@ function resetAll() {
   ensureRoundPoints();
   saveState();
   render();
-}
-
-function exportHistory() {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mi = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
-
-  const filename = `biliárd_${yyyy}.${mm}.${dd}_${hh}-${mi}-${ss}.txt`;
-  const content = state.history.join("\n");
-
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-  showToast(`A napló exportálva: ${filename}`);
 }
 
 loadState();
